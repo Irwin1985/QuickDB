@@ -188,7 +188,7 @@ Define Class quickdb As Custom
 		Lparameters tcSelectCmd, tcAlias, tcGroup
 
 		Try
-			Local i, lcField, lcPrimaryKey, lcSqlTableName, lcDataBase, lcSchema, lnIndex, lcOldDatabase, loView, lcUpdaTableFieldList, lcUpdateNameList
+			Local i, lcField, lcPrimaryKey, lcSqlTableName, lcDataBase, lcSchema, lnIndex, lcOldDatabase, loView as CursorAdapter, lcUpdaTableFieldList, lcUpdateNameList
 
 			This.parseQueryInfo(tcSelectCmd, @lcDataBase, @lcSchema, @lcSqlTableName)
 			If !Empty(lcDataBase)
@@ -233,7 +233,7 @@ Define Class quickdb As Custom
 				If !loView.CursorFill()
 					this.showError()
 					llReturn = .F.
-				Endif
+				EndIf		
 
 				=CursorSetProp("FetchSize", -1, tcAlias)
 				* Esperar hasta completar todos los registros para eviar error 'Connection is Busy'
@@ -242,7 +242,8 @@ Define Class quickdb As Custom
 					=Inkey(0.3, "H")
 				Enddo
 				Wait Clear
-
+				Go top in (tcAlias)
+				
 				* Aplicar índices
 				This.ApplyIndex(lcSqlTableName, tcAlias)
 				=CursorSetProp("Buffering", 5)
@@ -588,14 +589,16 @@ Define Class quickdb As Custom
 		lcQuery = Strtran(lcQuery, '@TBL_NAME', tcTableName)
 
 		This.SQLExec(lcQuery, "QuickDbCurIndex")
-
 		Select QuickDbCurIndex
 		Scan For &lcFilter
-			lcIndexName = Strtran(Strtran(Alltrim(QuickDbCurIndex.index_name), Chr(0)), Space(1))
-			lcIndexKeys = Strtran(Strtran(Alltrim(QuickDbCurIndex.index_keys), Chr(0)), Space(1))
+			lcIndexName = Alltrim(Strtran(Strtran(Alltrim(QuickDbCurIndex.index_name), Chr(0)), Space(1)))
+			lcIndexKeys = Alltrim(Strtran(Strtran(Alltrim(QuickDbCurIndex.index_keys), Chr(0)), Space(1)))
 
 			Select (tcAlias)
-			Index On &lcIndexKeys Tag &lcIndexName Additive
+			try
+				Index On &lcIndexKeys Tag &lcIndexName Additive
+			Catch 
+			endtry
 		Endscan
 
 		Use In QuickDbCurIndex
