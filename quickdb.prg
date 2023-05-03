@@ -200,7 +200,7 @@ Define Class quickdb As Custom
 			If Empty(tcAlias)
 				tcAlias = lcSqlTableName
 			Endif
-
+			
 			If !Used(tcAlias)
 				loView = Createobject('CursorAdapter')
 				loView.DataSourceType = 'ODBC'
@@ -209,6 +209,7 @@ Define Class quickdb As Custom
 				loView.SelectCmd = tcSelectCmd
 				loView.Tables = lcSqlTableName
 				loView.KeyFieldList = lcPrimaryKey
+				loView.SendUpdates = .T.
 
 				* Traer solo estructura para extraer información de las columnas.
 				loView.Nodata = .T.
